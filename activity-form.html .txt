@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>نموذج توثيق أدوات النشاط</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+  <style>
+    body {
+      font-family: 'Tahoma', sans-serif;
+      background-color: #fff;
+      margin: 30px;
+      direction: rtl;
+    }
+    h1 {
+      text-align: center;
+      color: #006c67;
+    }
+    form {
+      max-width: 700px;
+      margin: auto;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #006c67;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #004f4a;
+    }
+  </style>
+</head>
+<body>
+
+<h1>نموذج توثيق أدوات النشاط لمتوسطة الخرمة العامة</h1>
+
+<form id="activityForm">
+  <label>المنفذ:</label>
+  <input type="text" id="manager">
+
+  <label>مكان التنفيذ:</label>
+  <input type="text" id="place">
+
+  <label>تاريخ التنفيذ:</label>
+  <input type="date" id="date">
+
+  <label>عدد المستفيدين:</label>
+  <input type="number" id="beneficiaries">
+
+  <label>الأهداف:</label>
+  <textarea id="goals" rows="3"></textarea>
+
+  <label>الشواهد:</label>
+  <textarea id="evidence" rows="3"></textarea>
+
+  <button type="button" onclick="generatePDF()">توليد PDF</button>
+</form>
+
+<script>
+  function generatePDF() {
+    const manager = document.getElementById("manager").value;
+    const place = document.getElementById("place").value;
+    const date = document.getElementById("date").value;
+    const beneficiaries = document.getElementById("beneficiaries").value;
+    const goals = document.getElementById("goals").value;
+    const evidence = document.getElementById("evidence").value;
+
+    const docDefinition = {
+      content: [
+        { text: 'نموذج توثيق أدوات النشاط لمتوسطة الخرمة العامة', style: 'header', alignment: 'center' },
+        { text: `المنفذ: ${manager}`, style: 'field' },
+        { text: `مكان التنفيذ: ${place}`, style: 'field' },
+        { text: `تاريخ التنفيذ: ${date}`, style: 'field' },
+        { text: `عدد المستفيدين: ${beneficiaries}`, style: 'field' },
+        { text: `الأهداف:\n${goals}`, style: 'field' },
+        { text: `الشواهد:\n${evidence}`, style: 'field' }
+      ],
+      defaultStyle: {
+        font: 'Helvetica',
+        alignment: 'right'
+      },
+      styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+          margin: [0, 0, 0, 20]
+        },
+        field: {
+          fontSize: 14,
+          margin: [0, 5, 0, 5]
+        }
+      },
+      pageOrientation: 'portrait'
+    };
+
+    pdfMake.createPdf(docDefinition).download('نموذج_توثيق_النشاط.pdf');
+  }
+</script>
+
+</body>
+</html>
