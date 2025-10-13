@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نموذج توثيق أدوات النشاط لمتوسطة الخرمة العامة</title>
+<style>
+  body {
+    font-family: 'Tahoma', sans-serif;
+    background-color: white;
+    margin: 40px;
+    direction: rtl;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #006c67;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  header img {
+    height: 70px;
+  }
+  h1 {
+    text-align: center;
+    color: #006c67;
+    margin: 10px 0;
+  }
+  form {
+    width: 100%;
+    max-width: 700px;
+    margin: auto;
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  .images input {
+    margin-top: 5px;
+  }
+  button {
+    background-color: #006c67;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  button:hover {
+    background-color: #004f4a;
+  }
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 14px;
+    color: #666;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="https://upload.wikimedia.org/wikipedia/ar/7/7f/Ministry_of_Education_Saudi_Logo.png" alt="شعار وزارة التعليم">
+</header>
+
+<h1>نموذج توثيق أدوات النشاط لمتوسطة الخرمة العامة</h1>
+
+<form id="activityForm">
+  <label>المنفذ:</label>
+  <input type="text" id="manager">
+
+  <label>مكان التنفيذ:</label>
+  <input type="text" id="place">
+
+  <label>تاريخ التنفيذ:</label>
+  <input type="date" id="date">
+
+  <label>عدد المستفيدين:</label>
+  <input type="number" id="beneficiaries">
+
+  <label>الأهداف:</label>
+  <textarea id="goals" rows="3"></textarea>
+
+  <label>الشواهد:</label>
+  <textarea id="evidence" rows="3"></textarea>
+
+  <label>رفع الصور (حتى 3 صور):</label>
+  <div class="images">
+    <input type="file" accept="image/*" id="img1"><br>
+    <input type="file" accept="image/*" id="img2"><br>
+    <input type="file" accept="image/*" id="img3">
+  </div>
+
+  <button type="button" onclick="generatePDF()">توليد PDF</button>
+</form>
+
+<footer>نموذج توثيق أدوات النشاط - متوسطة الخرمة العامة</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  async function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+
+    doc.setFont("helvetica");
+    doc.setFontSize(14);
+    doc.text("نموذج توثيق أدوات النشاط لمتوسطة الخرمة العامة", 105, 20, { align: "center" });
+
+    const fields = [
+      { label: "المنفذ", value: document.getElementById("manager").value },
+      { label: "مكان التنفيذ", value: document.getElementById("place").value },
+      { label: "تاريخ التنفيذ", value: document.getElementById("date").value },
+      { label: "عدد المستفيدين", value: document.getElementById("beneficiaries").value },
+      { label: "الأهداف", value: document.getElementById("goals").value },
+      { label: "الشواهد", value: document.getElementById("evidence").value },
+    ];
+
+    let y = 40;
+    fields.forEach(field => {
+      doc.text(`${field.label}: ${field.value}`, 20, y);
+      y += 10;
+    });
+
+    const images = ["img1", "img2", "img3"];
+    for (const id of images) {
+      const file = document.getElementById(id).files[0];
+      if (file) {
+        const imgData = await toBase64(file);
+        doc.addPage();
+        doc.addImage(imgData, "JPEG", 15, 30, 180, 160);
+      }
+    }
+
+    doc.save("نموذج_توثيق_النشاط.pdf");
+  }
+
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+</script>
+
+</body>
+</html>
