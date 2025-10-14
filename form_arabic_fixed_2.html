@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نموذج وزارة التعليم - محدث</title>
+<style>
+  body {
+    font-family: "Amiri", "Arial", sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 20px;
+    direction: rtl;
+    text-align: right;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .header img {
+    width: 100px;
+  }
+  .form-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    max-width: 700px;
+    margin: auto;
+  }
+  h1 {
+    color: #006c35;
+  }
+  label {
+    font-weight: bold;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  button {
+    background-color: #006c35;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #004d26;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/1/17/Ministry_of_Education_Saudi_Logo.svg" alt="شعار وزارة التعليم">
+    <h1>نموذج وزارة التعليم</h1>
+  </div>
+
+  <div class="form-container">
+    <form id="eduForm">
+      <label for="name">الاسم:</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="date">التاريخ:</label>
+      <input type="date" id="date" name="date" required>
+
+      <label for="notes">الملاحظات:</label>
+      <textarea id="notes" name="notes" rows="4"></textarea>
+
+      <button type="button" onclick="generatePDF()">تصدير إلى PDF</button>
+    </form>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+
+      // تحميل خط عربي لتفادي مشكلة الترميز
+      const fontUrl = "https://cdn.jsdelivr.net/gh/alif-type/amiri/Amiri-Regular.ttf";
+      const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+      doc.addFileToVFS("Amiri-Regular.ttf", fontBytes);
+      doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+      doc.setFont("Amiri");
+
+      // العنوان
+      doc.setFontSize(18);
+      doc.text("نموذج وزارة التعليم", 105, 20, { align: "center" });
+
+      // الشعار
+      const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/1/17/Ministry_of_Education_Saudi_Logo.svg";
+      try {
+        const img = new Image();
+        img.src = logoUrl;
+        await new Promise(r => img.onload = r);
+        doc.addImage(img, "PNG", 160, 10, 30, 30);
+      } catch (e) {
+        console.warn("تعذر تحميل الشعار");
+      }
+
+      // إدخال البيانات
+      const name = document.getElementById("name").value;
+      const date = document.getElementById("date").value;
+      const notes = document.getElementById("notes").value;
+
+      doc.setFontSize(14);
+      doc.text(`الاسم: ${name}`, 20, 60);
+      doc.text(`التاريخ: ${date}`, 20, 70);
+      doc.text("الملاحظات:", 20, 85);
+      doc.text(notes, 20, 95, { maxWidth: 170 });
+
+      // حفظ الملف
+      doc.save("نموذج_وزارة_التعليم_محدث.pdf");
+    }
+  </script>
+</body>
+</html>
