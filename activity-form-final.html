@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>نموذج توثيق أدوات النشاط – متوسطة الخرمة العامة</title>
+
+<!-- Cairo font from Google (will load when online) -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{--accent:#0b67a3;--accent-dark:#054a73;--card:#ffffff}
+  body{font-family: 'Cairo', Tahoma, Arial, sans-serif; background:#f2f6fb; margin:0; padding:24px; direction:rtl; color:#222}
+  .container{max-width:800px;margin:0 auto}
+  header{background:var(--card);border-radius:8px;padding:18px 18px 10px;display:flex;align-items:center;gap:12px;position:relative;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+  header .logo{position:absolute;right:18px;top:12px;width:86px;height:auto}
+  header h1{margin:0 auto 0 0;font-size:20px;color:var(--accent);text-align:center;width:100%}
+  .card{background:var(--card);padding:20px;border-radius:8px;margin-top:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+  label{display:block;font-weight:600;margin-top:10px}
+  input[type="text"], input[type="number"], input[type="date"], textarea{width:100%;padding:10px;border:1px solid #d7dbe0;border-radius:6px;margin-top:6px;font-size:15px}
+  textarea{min-height:88px;resize:vertical}
+  .images input{display:block;margin-top:8px}
+  .actions{display:flex;gap:10px;justify-content:flex-start;margin-top:16px;align-items:center}
+  button.generate{background:var(--accent);color:#fff;border:none;padding:12px 18px;border-radius:8px;cursor:pointer;font-weight:600}
+  button.generate:hover{background:var(--accent-dark)}
+  .note{font-size:13px;color:#666;margin-top:12px}
+  footer{margin-top:18px;text-align:center;color:#666;font-size:13px}
+  /* printable area adjustments */
+  #printable{padding:20px;background:white;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <!-- logo right -->
+    <img class="logo" id="logoImg" src="https://upload.wikimedia.org/wikipedia/commons/1/17/Ministry_of_Education_Saudi_Logo.svg" alt="شعار">
+    <h1>نموذج توثيق أدوات النشاط – متوسطة الخرمة العامة</h1>
+  </header>
+
+  <div class="card">
+    <div id="printable">
+      <label>المنفذ</label>
+      <input type="text" id="executor" placeholder="اسم المنفذ أو مدير المدرسة">
+
+      <label>مكان التنفيذ</label>
+      <input type="text" id="location" placeholder="مكان إقامة النشاط">
+
+      <label>تاريخ التنفيذ</label>
+      <input type="date" id="date">
+
+      <label>عدد المستفيدين</label>
+      <input type="number" id="beneficiaries" placeholder="عدد المستفيدين">
+
+      <label>الأهداف</label>
+      <textarea id="goals" placeholder="اكتب الأهداف هنا..."></textarea>
+
+      <label>الشواهد</label>
+      <textarea id="evidence" placeholder="ملاحظات أو توضيحات"></textarea>
+
+      <label>رفع الصور (حتى 3 صور)</label>
+      <div class="images">
+        <input type="file" id="img1" accept="image/*">
+        <input type="file" id="img2" accept="image/*">
+        <input type="file" id="img3" accept="image/*">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="generate" id="genBtn">توليد PDF</button>
+      <span class="note">يعمل أفضل عند فتح الصفحة عبر GitHub Pages (رابط https) أو تشغيل خادم محلي.</span>
+    </div>
+  </div>
+
+  <footer>تم إعداد النموذج بواسطة متوسطة الخرمة العامة</footer>
+</div>
+
+<!-- html2pdf bundle (uses html2canvas + jsPDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<script>
+const genBtn = document.getElementById('genBtn');
+
+async function imagesToDataURLs() {
+  const ids = ['img1','img2','img3'];
+  const results = [];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el && el.files && el.files[0]) {
+      results.push(await fileToDataURL(el.files[0]));
+    }
+  }
+  return results;
+}
+function fileToDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+
+genBtn.addEventListener('click', async ()=> {
+  // copy printable element to a temp container and append images (if any)
+  const printable = document.getElementById('printable');
+  const clone = printable.cloneNode(true);
+  // inject images data URLs into clone for html2canvas to render without CORS issues
+  const dataUrls = await imagesToDataURLs();
+  if (dataUrls.length>0) {
+    const imgsContainer = document.createElement('div');
+    imgsContainer.style.marginTop = '12px';
+    for (const d of dataUrls) {
+      const im = document.createElement('img');
+      im.src = d;
+      im.style.maxWidth = '100%';
+      im.style.display = 'block';
+      im.style.marginTop = '8px';
+      imgsContainer.appendChild(im);
+    }
+    clone.appendChild(imgsContainer);
+  }
+
+  // create a temporary hidden wrapper to render
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'fixed';
+  wrapper.style.left = '-10000px';
+  wrapper.style.top = '0';
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  const opt = {
+    margin:       [10,10,10,10],
+    filename:     'نموذج_توثيق_النشاط.pdf',
+    image:        { type: 'jpeg', quality: 0.92 },
+    html2canvas:  { scale: 2, useCORS: true, allowTaint: false },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'] }
+  };
+
+  try {
+    await html2pdf().set(opt).from(wrapper).save();
+  } catch(e){
+    alert('حدث خطأ أثناء التصدير: '+e.message);
+  } finally {
+    document.body.removeChild(wrapper);
+  }
+});
+</script>
+</body>
+</html>
