@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نموذج عربي - PDF</title>
+<style>
+  body {
+    font-family: 'Amiri', serif;
+    direction: rtl;
+    text-align: right;
+    margin: 40px;
+    background-color: #f8f9fa;
+  }
+  header {
+    text-align: right;
+    margin-bottom: 20px;
+  }
+  img.logo {
+    width: 150px;
+    float: right;
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-family: inherit;
+    text-align: right;
+  }
+  button {
+    margin-top: 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+</style>
+<!-- تحميل مكتبة pdfmake التي تدعم اللغة العربية -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+</head>
+<body>
+<header>
+  <img src="C1BEDD16-A1A8-4C11-8623-AE68F05DE963.jpeg" class="logo" alt="شعار">
+</header>
+
+<h2>نموذج بيانات</h2>
+
+<form id="arabicForm">
+  <label>الاسم الكامل:</label>
+  <input type="text" id="name" placeholder="اكتب اسمك هنا">
+
+  <label>التاريخ:</label>
+  <input type="date" id="date">
+
+  <label>الملاحظات:</label>
+  <textarea id="notes" rows="5" placeholder="اكتب ملاحظاتك هنا"></textarea>
+
+  <button type="button" onclick="generatePDF()">تصدير إلى PDF</button>
+</form>
+
+<script>
+function generatePDF() {
+  const name = document.getElementById('name').value;
+  const date = document.getElementById('date').value;
+  const notes = document.getElementById('notes').value;
+
+  const docDefinition = {
+    content: [
+      { text: 'نموذج البيانات', style: 'header', alignment: 'right' },
+      { text: '\nالاسم الكامل: ' + name, alignment: 'right' },
+      { text: 'التاريخ: ' + date, alignment: 'right' },
+      { text: '\nالملاحظات:', bold: true, alignment: 'right' },
+      { text: notes, alignment: 'right' }
+    ],
+    defaultStyle: {
+      font: 'Amiri',
+      alignment: 'right'
+    },
+    styles: {
+      header: {
+        fontSize: 20,
+        bold: true,
+        margin: [0, 0, 0, 10]
+      }
+    }
+  };
+
+  pdfMake.createPdf(docDefinition).download('نموذج.pdf');
+}
+</script>
+
+</body>
+</html>
