@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>نموذج توثيق أدوات النشاط – متوسطة الخرمة العامة (Amiri)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+  :root{--accent:#0b67a3;--card:#fff}
+  body{font-family: 'Amiri', serif, Tahoma, Arial; background:#f6f8fb; margin:0; padding:22px; direction:rtl; color:#222}
+  .container{max-width:820px;margin:0 auto}
+  header{background:var(--card);border-radius:8px;padding:14px 18px;display:flex;align-items:center;position:relative;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+  header .logo{position:absolute;right:18px;top:10px;width:86px;height:auto}
+  header h1{margin:0 auto 0 0;font-size:20px;color:var(--accent);text-align:center;width:100%}
+  .card{background:var(--card);padding:18px;border-radius:8px;margin-top:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+  label{display:block;font-weight:700;margin-top:10px}
+  input[type="text"], input[type="number"], input[type="date"], textarea{width:100%;padding:10px;border:1px solid #e0e4ea;border-radius:6px;margin-top:6px;font-size:15px}
+  textarea{min-height:90px;resize:vertical}
+  .images input{display:block;margin-top:8px}
+  .actions{display:flex;gap:10px;justify-content:flex-start;margin-top:16px;align-items:center}
+  button.generate{background:var(--accent);color:#fff;border:none;padding:12px 18px;border-radius:8px;cursor:pointer;font-weight:700}
+  .note{font-size:13px;color:#666;margin-top:12px}
+  footer{margin-top:18px;text-align:center;color:#666;font-size:13px}
+  #status{color:#b00;margin-top:10px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <img class="logo" id="logoImg" src="https://upload.wikimedia.org/wikipedia/commons/1/17/Ministry_of_Education_Saudi_Logo.svg" alt="شعار">
+    <h1>نموذج توثيق أدوات النشاط – متوسطة الخرمة العامة</h1>
+  </header>
+
+  <div class="card">
+    <div id="printable">
+      <label>المنفذ</label>
+      <input type="text" id="executor" placeholder="اسم المنفذ أو مدير المدرسة">
+
+      <label>مكان التنفيذ</label>
+      <input type="text" id="location" placeholder="مكان إقامة النشاط">
+
+      <label>تاريخ التنفيذ</label>
+      <input type="date" id="date">
+
+      <label>عدد المستفيدين</label>
+      <input type="number" id="beneficiaries" placeholder="عدد المستفيدين">
+
+      <label>الأهداف</label>
+      <textarea id="goals" placeholder="اكتب الأهداف هنا..."></textarea>
+
+      <label>الشواهد</label>
+      <textarea id="evidence" placeholder="ملاحظات أو توضيحات"></textarea>
+
+      <label>رفع الصور (حتى 3 صور)</label>
+      <div class="images">
+        <input type="file" id="img1" accept="image/*">
+        <input type="file" id="img2" accept="image/*">
+        <input type="file" id="img3" accept="image/*">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="generate" id="genBtn">توليد PDF</button>
+      <div class="note">يفضل فتح الصفحة عبر رابط HTTPS (GitHub Pages) لضمان تحميل الخط والصورة بشكل صحيح.</div>
+    </div>
+    <div id="status" aria-live="polite"></div>
+  </div>
+
+  <footer>تم إعداد النموذج بواسطة متوسطة الخرمة العامة</footer>
+</div>
+
+<!-- pdfmake (we will inject font into vfs at runtime) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+
+<script>
+// helper: convert ArrayBuffer to base64
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(binary);
+}
+
+// load Amiri font (TTF) from CDN then put into pdfMake.vfs
+async function loadAmiriFont() {
+  const status = document.getElementById('status');
+  status.textContent = 'جارِ تحميل خط Amiri...';
+  try {
+    // reliable source for Amiri TTF
+    const url = 'https://cdn.jsdelivr.net/gh/alif-type/amiri/Amiri-Regular.ttf';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('فشل تحميل الخط: ' + res.status);
+    const buf = await res.arrayBuffer();
+    const b64 = arrayBufferToBase64(buf);
+    // ensure pdfMake vfs exists
+    if (!pdfMake.vfs) pdfMake.vfs = {};
+    pdfMake.vfs['Amiri-Regular.ttf'] = b64;
+    pdfMake.fonts = {
+      Amiri: {
+        normal: 'Amiri-Regular.ttf',
+        bold: 'Amiri-Regular.ttf',
+        italics: 'Amiri-Regular.ttf',
+        bolditalics: 'Amiri-Regular.ttf'
+      }
+    };
+    status.textContent = '';
+    return true;
+  } catch (e) {
+    document.getElementById('status').textContent = 'خطأ بتحميل الخط: ' + e.message + ' — افتح الصفحة عبر GitHub Pages أو الإنترنت.';
+    return false;
+  }
+}
+
+async function imagesToDataURLs() {
+  const ids = ['img1','img2','img3'];
+  const results = [];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el && el.files && el.files[0]) {
+      results.push(await fileToDataURL(el.files[0]));
+    }
+  }
+  return results;
+}
+function fileToDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+
+document.getElementById('genBtn').addEventListener('click', async ()=> {
+  document.getElementById('status').textContent = 'جاري تجهيز ملف PDF...';
+  const fontOk = await loadAmiriFont();
+  // prepare content
+  const executor = document.getElementById('executor').value || '-';
+  const location = document.getElementById('location').value || '-';
+  const date = document.getElementById('date').value || '-';
+  const beneficiaries = document.getElementById('beneficiaries').value || '-';
+  const goals = document.getElementById('goals').value || '-';
+  const evidence = document.getElementById('evidence').value || '-';
+  const dataUrls = await imagesToDataURLs();
+
+  const content = [];
+  content.push({ text: 'نموذج توثيق أدوات النشاط – متوسطة الخرمة العامة', style: 'title', alignment: 'center', margin: [0,0,0,6] });
+  content.push({ text: 'المنفذ: ' + executor, margin: [0,4,0,2], alignment: 'right' });
+  content.push({ text: 'مكان التنفيذ: ' + location, margin: [0,2,0,2], alignment: 'right' });
+  content.push({ text: 'تاريخ التنفيذ: ' + date, margin: [0,2,0,2], alignment: 'right' });
+  content.push({ text: 'عدد المستفيدين: ' + beneficiaries, margin: [0,2,0,8], alignment: 'right' });
+  content.push({ text: 'الأهداف:', bold:true, margin: [0,2,0,2], alignment: 'right' });
+  content.push({ text: goals, margin: [0,2,0,8], alignment: 'right' });
+  content.push({ text: 'الشواهد:', bold:true, margin: [0,2,0,2], alignment: 'right' });
+  content.push({ text: evidence, margin: [0,2,0,8], alignment: 'right' });
+
+  for (const d of dataUrls) {
+    content.push({ image: d, width: 420, margin: [0,6,0,6], alignment: 'center' });
+  }
+
+  const docDefinition = {
+    content: content,
+    defaultStyle: {
+      font: fontOk ? 'Amiri' : 'Helvetica',
+      alignment: 'right'
+    },
+    styles: {
+      title: { fontSize: 16, bold: true }
+    }
+  };
+
+  try {
+    pdfMake.createPdf(docDefinition).download('نموذج_توثيق_النشاط.pdf');
+    document.getElementById('status').textContent = 'تم تنزيل PDF.';
+  } catch (e) {
+    document.getElementById('status').textContent = 'خطأ أثناء إنشاء PDF: ' + e.message;
+  }
+});
+</script>
+</body>
+</html>
